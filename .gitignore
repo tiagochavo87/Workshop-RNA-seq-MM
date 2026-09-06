@@ -1,0 +1,27 @@
+# Saídas geradas pelos scripts — cada aluno gera as suas
+dados/
+data_raw/
+figuras/
+resultados/
+*.png
+*.csv
+*.csv.gz
+*.tsv
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+.Renviron
+
+# Python / Colab
+__pycache__/
+.ipynb_checkpoints/
+
+# ...mas o material de apoio entra
+!docs/**
+!docs/*.png
+
+# Sistema
+.DS_Store
+Thumbs.db
