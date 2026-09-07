@@ -1,62 +1,87 @@
-# CNV Pipeline — MMRF CoMMpass (GDC)
+<p align="center">
+  <img src="docs/logo.svg" alt="Workshop de RNA-seq — expressão diferencial em mieloma múltiplo" width="720">
+</p>
 
-A GitHub-ready Jupyter notebook pipeline to **process**, **QC**, and **analyze** Copy Number Variation (CNV) segments from the **MMRF CoMMpass** cohort via the NCI **Genomic Data Commons (GDC)**.
+<p align="center">
+  <a href="https://doi.org/10.5281/zenodo.22399365"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.22399365.svg" alt="DOI"></a>
+</p>
 
-This repository focuses on *downstream* CNV segment analytics (recurrence summaries, cytoband / fixed-bin aggregation, clinical integration, and survival/staging evaluation). The pipeline is designed to run in **Google Colab** or locally.
+Material de um workshop de dois dias sobre análise de expressão diferencial em
+RNA-seq, usando dados reais de mieloma múltiplo do **MMRF-CoMMpass** (camada
+aberta do NCI Genomic Data Commons). O contraste é diagnóstico contra recidiva,
+com cerca de 30 amostras por grupo.
 
-> Updated notebook version: **V7** (2026-02-05)
+A mesma análise é feita duas vezes: no primeiro dia em R com DESeq2, no segundo
+em Python com PyDESeq2. Comparar os dois resultados não é um apêndice — é o
+exercício central, e é onde aparece por que reprodutibilidade dá trabalho.
 
-## Repository contents
+## Estrutura
 
-- `CNV_MMRF_COMMPASS_Pipeline_GitHub_Documented.ipynb`  
-  Main notebook (outputs stripped to keep diffs clean).
+| Pasta | Conteúdo |
+|---|---|
+| `dia0-tratamento/` | Módulo 0.5 — do FASTQ à matriz de contagens: FastQC, fastp, HISAT2, samtools, featureCounts e MultiQC. Roda no Colab, com dados de teste de levedura. |
+| `dia1-R/` | Instalação de pacotes, análise principal com DESeq2, exploração por gene, figuras para publicação e um explorador em HTML. |
+| `dia2-python/` | O mesmo fluxo em PyDESeq2, mais o módulo de concordância entre as duas linguagens. |
+| `docs/` | Guia de código, roteiro do instrutor e material de apoio. |
 
-- `CNV_MMRF_COMMPASS_Pipeline_GitHub_Documented_NO_OUTPUTS.ipynb`  
-  Same notebook, explicitly output-free (recommended for version control).
+## Dados
 
-- `requirements.txt`  
-  Best-effort dependency list for local execution.
+A matriz congelada está no Zenodo, não no GDC. A razão é prática: trinta pessoas
+consultando a API do GDC ao mesmo tempo, no wi-fi de um auditório, não terminam a
+aula. E há uma razão melhor: um DOI fixa a versão do dado, coisa que uma consulta
+à API não faz.
 
-- `docs/PIPELINE_OVERVIEW.md`  
-  High-level description of stages, inputs, and outputs.
-
-## Quickstart (local)
-
-```bash
-python -m venv .venv
-# Linux/Mac:
-source .venv/bin/activate
-# Windows (PowerShell):
-# .venv\Scripts\Activate.ps1
-
-pip install -r requirements.txt
-jupyter lab
+```
+https://doi.org/10.5281/zenodo.22399365
 ```
 
-Open the notebook and run it from top to bottom.
+Os scripts baixam os arquivos sozinhos. Não é preciso conta no GDC nem acesso
+controlado ao dbGaP.
 
-## Quickstart (Google Colab)
+## Como usar
 
-Upload the notebook to Colab and run top-to-bottom.  
-If you store inputs in Google Drive, mount Drive and point the notebook to your `.tsv` inputs.
+**Antes do Dia 1 — `dia0-tratamento/`**
+Abra o notebook no Google Colab e execute do começo ao fim. Leva de 15 a 20
+minutos e mostra de onde vem uma matriz de contagens. Nenhuma instalação local.
 
-## Outputs
+**Dia 1 — `dia1-R/`**
+No RStudio Desktop, rode `00_instalar_pacotes.R` uma vez e depois
+`01_workshop_mieloma.R`. O script está dividido em módulos M0 a M8; use
+`Ctrl+Shift+O` para navegar entre eles e `Ctrl+Alt+T` para executar a seção onde
+o cursor estiver.
 
-All artifacts are written under:
+**Dia 2 — `dia2-python/`**
+No Colab, abra o notebook do PyDESeq2. O módulo 9 refaz a comparação com o
+resultado do Dia 1 e mede a concordância gene a gene.
 
-- `outputs/run_<RUN_ID>/raw/`
-- `outputs/run_<RUN_ID>/processed/`
-- `outputs/run_<RUN_ID>/results/`
-- `outputs/run_<RUN_ID>/logs/`
+## O que esperar do resultado
 
-The notebook ends with a concise list of deliverables and their paths.
+O contraste diagnóstico contra recidiva devolve **poucos genes diferenciais** — e
+isso está certo. Ausência de mudança não é ausência de expressão: as células ainda
+são plasmócitos malignos nos dois momentos, e o que separa recidiva de diagnóstico
+é mais subclonal do que transcricional em larga escala.
 
-## Notes / limitations
+Os dois pipelines chegam a listas de tamanhos diferentes, com correlação de
+log2FoldChange acima de 0,999 entre eles. A discussão de por que isso acontece —
+filtro independente, convenção de p-valor composto, denominador do
+Benjamini-Hochberg — é o assunto do módulo de concordância.
 
-- **Exact-breakpoint recurrence** (`SegmentID = chr:start-end`) is included for comparability, but breakpoint variation can underestimate biological recurrence.
-- **Cytoband overlap** and **fixed 1Mb bins** provide more stable recurrence summaries.
-- When working with CNVs already called upstream, **purity/ploidy adjustment may be unavailable**; the pipeline is explicit about this limitation.
+Duas decisões metodológicas que valem por metade do workshop:
 
-## License
+- **Segmentos de imunoglobulina são removidos antes do ajuste do modelo.** Em
+  mieloma, o rearranjo V(D)J é específico do clone de cada paciente. Se ficarem na
+  matriz, dominam o contraste por acaso.
+- **A identidade das amostras é travada entre as duas linguagens.**
+  `set.seed(42)` em R e `random_state=42` em pandas não sorteiam os mesmos
+  pacientes. O arquivo `amostras_R.csv` existe para resolver isso.
 
-MIT (see `LICENSE`).
+## Requisitos
+
+R 4.3 ou superior com DESeq2 e apeglm, instalados pelo script do Dia 1. Para os
+notebooks, só um navegador — o Colab cuida do resto.
+
+## Licença
+
+Código sob licença MIT. Material didático sob CC BY 4.0. Os dados de expressão são
+do MMRF-CoMMpass, distribuídos pelo NCI Genomic Data Commons sob os termos do
+consórcio; cite a fonte original ao reutilizá-los.
